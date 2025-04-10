@@ -1,0 +1,266 @@
+package view;
+
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Random;
+
+public class FlappyBirdWindow extends JFrame {
+    public FlappyBirdWindow() {
+        setTitle("Flappy Bird");
+        setSize(360, 640);
+        setResizable(false);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        // Panel hiển thị hình nền
+        BackgroundJpanel bgPanel = new BackgroundJpanel();
+        setContentPane(bgPanel);
+        setVisible(true); // hiển thị cửa sổ
+    }
+
+    // Bài 1
+    class BackgroundJpanel extends JPanel {
+        private Image backgroundImage;
+        private Bird bird;
+        private ArrayList<Pipe> pipes;
+        private int score = 0;
+        private boolean isGameOver = false;
+
+        private void restartGame() {
+            // reset bird
+            bird = new Bird();
+            // reset pipes
+            pipes.clear();
+            for (int i = 0; i < 3; i++) {
+                int gapY = 100 + new Random().nextInt(300); // random chiều cao ống trên
+                Pipe pipe = new Pipe(gapY);
+                pipe.setX(400 + 300 * i); // xét hoành độ cho từng ống
+                pipes.add(pipe);
+            }
+            // reset status
+            score = 0;
+            isGameOver = false;
+            // requestFocus();
+        }
+
+        public BackgroundJpanel() {
+            // load ảnh nền
+            backgroundImage = new ImageIcon("images/flappybirdbg.png").getImage();
+            // khởi tạo bird
+            bird = new Bird();
+            pipes = new ArrayList<>();
+            for (int i = 0; i < 3; i++) {
+                int gapY = 100 + new Random().nextInt(300); 
+                Pipe pipe = new Pipe(gapY);
+                pipe.setX(400 + 300 * i);
+                pipes.add(pipe);
+            }
+            // tạo timer
+            Timer timer = new Timer(40, new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    if (!isGameOver) {
+                        bird.update();
+                        for (Pipe pipe : pipes) {
+                            pipe.update();
+                            // tính điểm
+                            if (!pipe.passed && pipe.pipeWidth + pipe.x < bird.x) {
+                                score++;
+                                pipe.setPassed(true);
+                                System.out.println("score: " + score);
+                            }
+                            // kiểm tra va chạm
+                            if (cheackCollision(bird, pipe)) {
+                                isGameOver = true;
+                                // timer.stop(); // dừng game loop
+                            }
+                        }
+                        // chim chạm đất
+                        if (bird.getY() >= 640 - 50 - 80) {
+                            isGameOver = true;
+                        }
+
+                    }
+                    repaint(); // cập nhật giao diện
+                }
+            });
+            timer.start();
+            // bắt sự kiện
+            addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (!isGameOver && (e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_ENTER)) {
+                        bird.flyUp();
+                    } else if (e.getKeyCode() == KeyEvent.VK_ENTER && isGameOver) {
+                        restartGame();
+                    }
+                }
+            });
+            setFocusable(true);
+            requestFocusInWindow();
+        }
+
+        // tạo hàm kiểm tra va chạm
+        private boolean cheackCollision(Bird bird, Pipe pipe) {
+            Rectangle birdRectangle = new Rectangle((int) bird.getX(), (int) bird.getY(), 50, 50);
+            Rectangle topPipRectangle = new Rectangle(pipe.getX(), 0, pipe.getPipeWidth(), pipe.gapY);
+            Rectangle bottomRectangle = new Rectangle(pipe.getX(), pipe.getGapY() + pipe.getGapHeight(),
+                    pipe.getPipeWidth(), 640 - (pipe.getGapY() + pipe.getGapHeight() + 100));
+            return birdRectangle.intersects(topPipRectangle) || birdRectangle.intersects(bottomRectangle);
+        }
+
+        @Override // ghi đè method lớp cha
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            // vẽ hình nền
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            // vẽ con chim
+            bird.draw(g);
+            for (Pipe pipe : pipes) {
+                pipe.draw(g);
+            }
+
+            // hiển thị kết quả
+            if (isGameOver) {
+                g.setColor(Color.RED);
+                g.setFont(new Font("Arial", Font.BOLD, 36));
+                FontMetrics fm = g.getFontMetrics();
+                String message = "Game Over";
+                int textWidth = fm.stringWidth(message);
+                // int textHeight = fm.getHeight();
+                int x = (getWidth() - textWidth) / 2;
+                int y = (getHeight()) / 2;
+                 // hiển thị chữ gameOver
+                g.drawString(message, x, y);
+                // hiển thị score
+                g.setFont(new Font("Arial", Font.BOLD, 32));
+                String scoreMsg = "Score: " + score;
+                int scoreX = (getWidth() - g.getFontMetrics().stringWidth(scoreMsg)) / 2;
+                int scoreY = y + 50;
+                g.drawString(scoreMsg, scoreX, scoreY);
+                // hiển thị thông báo chơi lại
+                g.setFont(new Font("Arial", Font.PLAIN, 20));
+                String restartText = "Nhấn Enter để chơi lại";
+                int restartX = (getWidth() - g.getFontMetrics().stringWidth(restartText)) / 2;
+                g.drawString(restartText, restartX, y + 80);
+            } else {
+                // vẽ điểm lên màn hình khi chưa bị gameOver
+                g.setColor(Color.WHITE);
+                g.setFont(new Font("Arial", Font.BOLD, 24));
+                g.drawString("Score: " + score, 20, 30);
+            }
+
+        }
+    }
+
+    // Bài 2
+    class Bird {
+        private double x;// hoành độ tăng khi di chuyển sang phải
+        private double y; // tung độ tăng khi di chuyển xuống dưới
+        private Image birdImage;
+        private double velocity = 0; // vận tốc rơi
+        private final double gravity = 0.5; // trọng lực
+
+        public Bird() {
+            x = 100;
+            y = 50;
+            // load hình ảnh con chim
+            birdImage = new ImageIcon("images/flappybird.png").getImage();
+        }
+
+        public void draw(Graphics g) {
+            g.drawImage(birdImage, (int) x, (int) y, 30, 30, null);
+        }
+
+        public void update() {
+            velocity += gravity;
+            y += velocity;
+            if (y >= 640 - 50 - 80) { // 80
+                y = 640 - 50 - 80; // Con chim không được rơi ra ngoài
+                velocity = 0; // Dừng rơi
+            }
+            // System.out.println("Y: " + y + ", Velocity: " + velocity);
+        }
+
+        public void flyUp() {
+            velocity -= 8; // chim bay lên
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+    }
+
+    // Bài 3
+    class Pipe {
+        private int x; // hoành độ/vị trí của ống , tính từ phải sang trái
+        private int gapY; // chiều cao ống trên
+        private final int pipeWidth; // chiều rộng ống
+        private final int gapHeight; // khoảng cách giữa 2 ống
+        private Image topPipeImg;
+        private Image bottomPipeImg;
+        private boolean passed = false;
+        Random random = new Random();
+
+        public Pipe(int initialPipeHeight) {
+            pipeWidth = 60; // chiều rộng ống
+            gapHeight = 150;
+            gapY = initialPipeHeight;// khởi tạo gapY
+            // load hình ảnh pipe
+            topPipeImg = new ImageIcon("images/toppipe.png").getImage();
+            bottomPipeImg = new ImageIcon("images/bottompipe.png").getImage();
+        }
+
+        public void draw(Graphics g) {
+            g.drawImage(topPipeImg, x, 0, pipeWidth, gapY, null);
+            g.drawImage(bottomPipeImg, x, gapY + gapHeight, pipeWidth, 640 - (gapY + gapHeight + 100), null);
+        }
+
+        public void update() {
+            x -= 3; // mặc định ống di chuyển sang trái
+            if (x < -pipeWidth) {
+                x = 840;
+                gapY = 100 + random.nextInt(300);
+                passed = false;
+            }
+        }
+
+        public boolean isPassed() {
+            return passed;
+        }
+
+        public void setPassed(boolean passed) {
+            this.passed = passed;
+        }
+        // hàm get, set
+        public void setX(int x) {
+            this.x = x;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getGapY() {
+            return gapY;
+        }
+
+        public int getGapHeight() {
+            return gapHeight;
+        }
+
+        public int getPipeWidth() {
+            return pipeWidth;
+        }
+
+    }
+
+    public static void main(String[] args) {
+        new FlappyBirdWindow(); // tạo sửa sổ
+    }
+}
