@@ -77,10 +77,9 @@ public class FlappyBirdWindow extends JFrame {
                             }
                         }
                         // chim chạm đất
-                        if (bird.getY() >= 640 - 50 - 80) {
+                        if (bird.getY() >= 640 - 50 || bird.getY() <= 0) {
                             isGameOver = true;
                         }
-
                     }
                     repaint(); // cập nhật giao diện
                 }
@@ -103,10 +102,10 @@ public class FlappyBirdWindow extends JFrame {
 
         // tạo hàm kiểm tra va chạm
         private boolean cheackCollision(Bird bird, Pipe pipe) {
-            Rectangle birdRectangle = new Rectangle((int) bird.getX(), (int) bird.getY(), 50, 50);
+            Rectangle birdRectangle = new Rectangle((int) bird.getX(), (int) bird.getY(), 30, 30);
             Rectangle topPipRectangle = new Rectangle(pipe.getX(), 0, pipe.getPipeWidth(), pipe.gapY);
             Rectangle bottomRectangle = new Rectangle(pipe.getX(), pipe.getGapY() + pipe.getGapHeight(),
-                    pipe.getPipeWidth(), 640 - (pipe.getGapY() + pipe.getGapHeight() + 100));
+                    pipe.getPipeWidth(), 640 - (pipe.getGapY() + pipe.getGapHeight()));
             return birdRectangle.intersects(topPipRectangle) || birdRectangle.intersects(bottomRectangle);
         }
 
@@ -131,7 +130,7 @@ public class FlappyBirdWindow extends JFrame {
                 // int textHeight = fm.getHeight();
                 int x = (getWidth() - textWidth) / 2;
                 int y = (getHeight()) / 2;
-                 // hiển thị chữ gameOver
+                // hiển thị chữ gameOver
                 g.drawString(message, x, y);
                 // hiển thị score
                 g.setFont(new Font("Arial", Font.BOLD, 32));
@@ -176,8 +175,8 @@ public class FlappyBirdWindow extends JFrame {
         public void update() {
             velocity += gravity;
             y += velocity;
-            if (y >= 640 - 50 - 80) { // 80
-                y = 640 - 50 - 80; // Con chim không được rơi ra ngoài
+            if (y >= 640 - 50) { 
+                y = 640 - 50; // Con chim không được rơi ra ngoài
                 velocity = 0; // Dừng rơi
             }
             // System.out.println("Y: " + y + ", Velocity: " + velocity);
@@ -218,7 +217,7 @@ public class FlappyBirdWindow extends JFrame {
 
         public void draw(Graphics g) {
             g.drawImage(topPipeImg, x, 0, pipeWidth, gapY, null);
-            g.drawImage(bottomPipeImg, x, gapY + gapHeight, pipeWidth, 640 - (gapY + gapHeight + 100), null);
+            g.drawImage(bottomPipeImg, x, gapY + gapHeight, pipeWidth, 640 - (gapY + gapHeight), null);
         }
 
         public void update() {
