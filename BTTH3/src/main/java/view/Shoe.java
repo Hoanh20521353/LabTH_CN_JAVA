@@ -14,6 +14,7 @@ public class Shoe {
     private String imagePath;
     private String brand;
     private String price;
+    private Shoe newShoe;
 
     public Shoe(String title, String note, String imagePath, String brand, String price) {
         this.title = title;
@@ -29,5 +30,9 @@ public class Shoe {
     public String getImagePath() { return imagePath; }
     public String getBrand() { return brand; }
     public String getPrice() { return price; }
+    //
+    public void setShoe(Shoe newShoe) {
+        this.newShoe=newShoe;
+    }
 }
 

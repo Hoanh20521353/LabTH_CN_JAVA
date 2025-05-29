@@ -18,7 +18,7 @@ public class RoundedPanel extends JPanel {
     private int radius;
     private Border defaultBorder;
     private Border hoverBorder;
-    public RoundedPanel(int radius, Color bgColor,Shoe newShoe,Shoe shoe) {
+    public RoundedPanel(int radius, Color bgColor) {
         this.radius = radius;
         setBackground(bgColor);
         setOpaque(false); // để paintComponent có hiệu lực
@@ -41,7 +41,6 @@ public class RoundedPanel extends JPanel {
         @Override
         public void mouseEntered(MouseEvent e) {
             setBorder(hoverBorder);
-            newShoe=shoe;
         }
 
         @Override

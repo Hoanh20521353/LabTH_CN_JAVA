@@ -1,7 +1,8 @@
 view/Main.class
+view/ProcessShoePanel$1.class
 view/RoundedPanel.class
 view/Shoe.class
 view/RoundedBorder.class
-SimpleSwingApp.class
 view/RoundedPanel$1.class
 view/ShoeData.class
+view/ProcessShoePanel.class
